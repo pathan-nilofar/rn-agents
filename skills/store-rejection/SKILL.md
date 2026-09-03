@@ -1,6 +1,6 @@
 ---
 name: "store-rejection"
-description: "Decodes an App Store or Google Play rejection into what the reviewer actually meant, what in the app triggered it, what to change, and a draft reply to App Review. Covers Apple guideline numbers (2.1, 4.2, 5.1.1, 3.1.1 and the rest) and Play policy strikes. Use when an app submission is rejected, when a reviewer's message is unclear, when a binary is stuck in review, when a Play update is blocked, or when preparing a resubmission or an appeal."
+description: "Decodes an App Store or Google Play rejection into what the reviewer actually meant, what in the app triggered it, what to change, and a draft response. Covers Apple guideline numbers (2.1, 4.2, 5.1.1, 3.1.1 and the rest) and Google Play policy strikes — data safety mismatches, target API level, restricted permissions, background location, Play Billing and Families policy — including why a Play strike is more serious than an Apple rejection. Use when an app submission is rejected, when a reviewer's message is unclear, when a binary is stuck in review, when a Play update is blocked, or when preparing a resubmission or an appeal."
 ---
 
 # Store Rejection Decoder
@@ -104,24 +104,80 @@ Any app where users can post content needs: a way to **report** content, a way t
 **block** users, a published moderation policy, and a stated response window. Missing
 any one of the four triggers this.
 
-## Google Play — the common ones
+## Google Play — a different game entirely
 
-| Reason | What it means |
-|---|---|
-| **Data safety form mismatch** | The declared form does not match what the SDKs collect. Check every dependency, not just your code. |
-| **Target API level** | Play enforces a minimum `targetSdkVersion` that rises each year. Purely a build-config fix. |
-| **Background location** | Requires a separate declaration and a demo video showing why. Most apps should drop the permission instead. |
-| **Permissions declaration** | `QUERY_ALL_PACKAGES`, SMS and Call Log need a specific approved use case. |
-| **Deceptive behaviour** | Functionality that does not match the listing, or an undisclosed ad SDK. |
-| **Families policy** | Anything reachable by under-13s pulls in a much stricter ruleset. |
+**Do not treat a Play rejection like an Apple one.** The mechanics are opposite in three
+ways that change what you should do:
 
-Play strikes are **account-level**, not app-level. Repeated strikes risk the developer
-account, so treat a Play rejection as more serious than an Apple one.
+| | Apple | Google Play |
+|---|---|---|
+| Who reviews | A human you can reply to | Mostly automated |
+| How you push back | Reply in the Resolution Center, answered in hours | An appeal form, days to weeks, often templated |
+| What is at stake | This build | **The developer account** — strikes accumulate |
+
+**That last row is the important one.** Apple rejects a binary. Google issues a *policy
+strike* against the account, and repeated strikes lead to app removal and eventually
+account termination. A Play rejection is more serious than an Apple one, and arguing a
+borderline case is riskier.
+
+**So: fix first, appeal only when clearly wrong.** With Apple, a reply is often cheaper
+than a resubmission. With Play, the reverse — resubmit a corrected build, and appeal
+only when the policy plainly does not apply.
+
+### The common Play rejections
+
+**Data safety form mismatch** — the declared form does not match what the app actually
+collects. Almost always an SDK, not your own code: an analytics, crash, ads or attribution
+library collecting an identifier you did not declare. **Audit every dependency, not just
+your source.** Adding Firebase Analytics or a crash reporter and not updating the form
+triggers this reliably.
+
+**Target API level** — Play raises the minimum `targetSdkVersion` every year, and existing
+apps get a deadline before updates are blocked. Pure build-config, no code, but it can
+force a dependency upgrade chain.
+
+**Background location** — `ACCESS_BACKGROUND_LOCATION` needs a separate declaration form
+*and* a demo video showing the in-app feature that requires it. Most apps that request it
+do not need it. **Removing the permission is usually cheaper than justifying it.**
+
+**Restricted permissions** — `QUERY_ALL_PACKAGES`, SMS, and Call Log each need an approved
+use case from a short published list. If your app is not on that list, no amount of
+explanation will pass.
+
+**Account deletion** — like Apple, Play now requires apps with accounts to offer in-app
+deletion *and* a web-accessible deletion URL declared in the console. The web URL is the
+half people miss.
+
+**Play Billing** — digital goods and in-app content must use Play's billing system.
+Same trap as Apple's 3.1.1, and same cost: it is a business-model problem, not a code one.
+
+**Deceptive behaviour** — functionality that does not match the store listing, an
+undisclosed ad SDK, or a permission requested with no visible feature behind it.
+
+**Families / Designed for Families** — if the listing targets children, or the content
+rating suggests it might, a much stricter ruleset applies: certified ad SDKs only,
+no data collection from children, no external links.
+
+**Broken or incomplete** — Play's automated review does install and launch the app.
+Crashing on their emulator, or a login screen with no demo credentials in the console
+notes, fails here just as it does with Apple.
+
+**New personal developer accounts** — accounts created recently must run a closed test
+with a minimum number of testers over a set period before production access is granted.
+This is not a rejection so much as a gate, and it surprises people. **Verify the current
+thresholds in the Play Console — they have changed more than once.**
+
+### Reading a Play rejection
+
+The email is usually generic. The real detail is in the **Play Console → Policy status**,
+which names the specific policy and often the exact APK, permission or listing field.
+**Always ask for what the Console says, not just the email.** They are frequently
+different, and the email alone is not enough to diagnose from.
 
 ## What to produce
 
 ```markdown
-## Rejection — Guideline <n> · <name>
+## Rejection — <App Store · Guideline n> or <Play · policy name>
 
 **What they mean**
 <plain language, one short paragraph>
@@ -136,11 +192,13 @@ account, so treat a Play rejection as more serious than an Apple one.
 **What to change**
 <concrete — file, setting, or the flow to add. Config where it is config.>
 
-**Resubmit or reply?**
-<see below>
+**Resubmit, reply, or appeal?**
+<Apple: replying is often cheaper than resubmitting.
+ Play: fix and resubmit; appeal only when the policy plainly does not apply,
+ because strikes land on the account.>
 
-**Draft reply to App Review**
-<only when replying is the right move>
+**Draft response**
+<an App Review reply, or a Play appeal — they are written differently>
 ```
 
 ## Resubmit, or reply first
@@ -180,5 +238,8 @@ unchanged.
 - **Guidelines change.** Apple revises the App Review Guidelines several times a year
   and Play policy more often. Confirm anything version-specific against
   `developer.apple.com/app-store/review/guidelines/` before acting on it.
+- **Do not encourage appealing a Play strike on a borderline reading.** Apple costs a
+  build; Play costs account standing. When it is genuinely arguable, say the risk out
+  loud and let a human decide.
 - If the rejection mentions **legal, IP, or a named rights-holder**, say plainly that
   it needs a lawyer rather than drafting an argument.
