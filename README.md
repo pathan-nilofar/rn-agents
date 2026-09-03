@@ -61,7 +61,7 @@ a system prompt.
 ## Why markdown is a reasonable way to build an agent
 
 I also wrote [rn-review](https://github.com/pathan-nilofar/rn-review), which is 700
-lines of Python. These four are markdown. The difference is not effort — it is what
+lines of Python. These six are markdown. The difference is not effort — it is what
 the task needs.
 
 **Code, when the task is deterministic.** rn-review parses a diff, matches ten
