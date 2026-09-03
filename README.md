@@ -1,15 +1,30 @@
 # rn-agents
 
-Four agents for React Native work, defined entirely in markdown. No code.
+Six agents for React Native work, defined entirely in markdown. No code.
 
 ```
 skills/
-  release-notes/SKILL.md     merged PRs → store release notes
+  store-rejection/SKILL.md   App Store / Play rejection → what they actually meant
+  rn-upgrade/SKILL.md        package.json → an ordered upgrade plan
   crash-triage/SKILL.md      stack trace → triaged ticket
   rn-perf-audit/SKILL.md     component → performance findings, by user impact
+  release-notes/SKILL.md     merged PRs → store release notes
 agents/
   rn-reviewer.md             a subagent that reviews a diff
 ```
+
+The two newest are the ones that took the longest to write, because they are the ones
+carrying knowledge that only comes from shipping:
+
+**store-rejection** — Apple tells you which rule you broke and almost never tells you
+what you did. *"Guideline 2.1 — Performance"* narrows it to about forty possible causes.
+This decodes the common guideline numbers into what actually triggers them, ranks the
+likely cause, and drafts the reply — including when to reply instead of resubmitting,
+which is the part that costs teams a week.
+
+**rn-upgrade** — reads `package.json`, finds which dependencies will break, and orders
+the migration so that **every step leaves the app shippable**. Upgrades get abandoned
+because someone attempts four versions in one branch and cannot ship for a month.
 
 Each file is the whole agent. There is nothing else — no dependencies, no runtime of
 mine, no build. You copy the file into a directory and the agent exists.
@@ -28,9 +43,11 @@ Then just say what you want. The description in the frontmatter is what makes th
 right agent load:
 
 ```
-draft the release notes for this version
+our app got rejected: Guideline 2.1 — Performance: App Completeness
+plan an upgrade from RN 0.68 to 0.74
 triage this crash: <paste stack trace>
 why does the feed screen feel slow?
+draft the release notes for this version
 review my branch
 ```
 
@@ -67,6 +84,10 @@ is most of the work in building agents that are actually useful.
 Not "you are a helpful assistant." Each one carries the thing that takes years to
 learn:
 
+- **store-rejection** maps each Apple guideline number to what actually triggers it —
+  2.1 is usually a missing demo account or an IPv6-only backend, 4.2 is a web wrapper,
+  5.1.1 is a permission string that says what rather than why. None of that is in
+  Apple's documentation; it comes from submissions.
 - **crash-triage** opens with a table mapping trace signatures to which layer crashed
   — JavaScript, iOS native, Android native, ANR, memory — because the fix lives in a
   different part of the codebase for each, and identifying that first saves an hour.
